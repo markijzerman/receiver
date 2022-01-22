@@ -55,18 +55,19 @@ mod.hook.register("script_pre_init","my init hacks",function()
        url = 'https://broadcast.norns.online' ..v
       table.insert(archivedStreamsURL, url)
     else
-      -- now make list of the live streams check this though, not tested
-       name = v:sub(2, -5)
+      -- now make list of the live streams
+       name = v:sub(2, -5).. " (live)"
       table.insert(liveStreamsName, name)
-       url = 'https://broadcast.norns.online' ..v.. " (live)"
+       url = 'https://broadcast.norns.online' ..v
       table.insert(liveStreamsURL, url)
     end
     
   end
   
   -- add both live and archived together, in that order
-   names = cleanNils({table.unpack(liveStreamsName), table.unpack(archivedStreamsName)})
-   stations = cleanNils({table.unpack(liveStreamsURL), table.unpack(archivedStreamsURL)})
+
+  names = cleanNils(tableConcat(liveStreamsName,archivedStreamsName))
+  stations = cleanNils(tableConcat(liveStreamsURL,archivedStreamsURL))
   
   -- make menu
   -- first for the radio stations, then for broadcast
@@ -114,6 +115,13 @@ function cleanNils(t)
     ans[ #ans+1 ] = v
   end
   return ans
+end
+
+function tableConcat(t1,t2)
+   for i=1,#t2 do
+      t1[#t1+1] = t2[i]
+   end
+   return t1
 end
 
 
