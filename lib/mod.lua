@@ -30,39 +30,43 @@ end)
 
 mod.hook.register("script_pre_init","my init hacks",function()
   
-    liveStreamsURL = {'off'}
-   archivedStreamsURL = {}
-   liveStreamsName = {'off'}
-   archivedStreamsName = {}
-   names = {}
-   stations = {}
-  print("RECEIVER mod up and running")
-   getStreams = io.popen([[wget -q -O - https://broadcast.norns.online --no-check-certificate | sed -n 's/.*href="\([^"]*\).*/\1/p' | grep '.mp3$']])
-   result = getStreams:read("*a")
-   streamURL = mysplit(result, sep)
-   getStreams:close()
-  
-  for k,v in pairs(streamURL) do
-    -- first make list of all archived recordings
-     pattern = "^/archived/"
-     isArchive = streamURL[k]:find(pattern) ~= nil
-    if isArchive == true then
-       month = v:sub(15, 16)
-       day = v:sub(17, 18)
-       ndate = month.. "-" ..day
-       name = ndate.. " " ..v:sub(24, -5)
-      table.insert(archivedStreamsName, name)
-       url = 'https://broadcast.norns.online' ..v
-      table.insert(archivedStreamsURL, url)
-    else
-      -- now make list of the live streams
-       name = v:sub(2, -5).. " (live)"
-      table.insert(liveStreamsName, name)
-       url = 'https://broadcast.norns.online' ..v
-      table.insert(liveStreamsURL, url)
-    end
-    
-  end
+liveStreamsURL = {'off'}
+archivedStreamsURL = {}
+liveStreamsName = {'off'}
+archivedStreamsName = {}
+names = {}
+stations = {}
+print("RECEIVER mod up and running")
+
+-- get the LIVE streams
+getLiveStreams = io.popen([[wget -q -O - https://streammyaudio.com/live --no-check-certificate | sed -n 's/.*source src="\([^"]*\).*/\1/p' | grep '.mp3']])
+resultLive = getLiveStreams:read("*a")
+streamURLLive = mysplit(resultLive, sep)
+getLiveStreams:close()
+
+-- get the ARCHIVED streams
+getArchStreams = io.popen([[wget -q -O - https://streammyaudio.com/archive --no-check-certificate | sed -n 's/.*source src="\([^"]*\).*/\1/p' | grep '.mp3']])
+resultArch = getArchStreams:read("*a")
+streamURLArch = mysplit(resultArch, sep)
+getArchStreams:close()
+
+-- create live stream list
+for streamCount = 1, #streamURLLive do
+  name = streamURLLive[streamCount]:gsub("(.*)%..*$","%1")
+  name = 'LIVE: ' .. name:sub(2)
+  table.insert(liveStreamsName, name)
+  url = 'https://streammyaudio.com' ..streamURLLive[streamCount]
+  table.insert(liveStreamsURL, url)
+end
+
+-- create archived recordings list
+for streamCount = 1, #streamURLArch do
+  name = streamURLArch[streamCount]:gsub("(.*)%..*$","%1")
+  name = name:sub(11)
+  url = 'https://streammyaudio.com' ..streamURLArch[streamCount]
+  table.insert(archivedStreamsName, name)
+  table.insert(archivedStreamsURL, url)
+end
   
   -- add both live and archived together, in that order
 
